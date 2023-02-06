@@ -35,6 +35,20 @@ if( USE_ZSTD )
 endif()
 
 #
+# Also link Kokkos
+#
+if( USE_KOKKOS )
+  if(USE_BUNDLED_KOKKOS)
+    # Declare dependency so that `kokkos-download` is finished before SPERR is built.
+    add_dependencies( SPERR kokkos-download )
+    target_link_libraries( SPERR PUBLIC kokkoscore )
+  else()
+    target_link_libraries( SPERR PUBLIC KOKKOS::Kokkos )
+  endif()
+endif()
+
+
+#
 # LTO
 #
 include(CheckIPOSupported)

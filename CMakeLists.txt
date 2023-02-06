@@ -33,7 +33,9 @@ endif()
 option( BUILD_SHARED_LIBS "Build shared SPERR library" ON )
 option( BUILD_UNIT_TESTS "Build unit tests using GoogleTest" ON )
 option( BUILD_CLI_UTILITIES "Build a set of command line utilities" ON )
-option( USE_OMP "Use OpenMP parallelization on 3D volumes" ON )
+option( USE_OMP "Use OpenMP parallelization on 3D volumes" OFF )
+option( USE_KOKKOS "enable KOKKOS to run on co-processor architectures" ON )
+cmake_dependent_option(USE_BUNDLED_KOKKOS "Prefer to use the bundled KOKKOS to an external one" ON "USE_KOKKOS" OFF)
 option( USE_ZSTD "Incorporate ZSTD to achieve further reduction (~5%)" ON )
 cmake_dependent_option(USE_BUNDLED_ZSTD "Prefer to use the bundled ZSTD to an external one" ON "USE_ZSTD" OFF)
 option( SPERR_PREFER_RPATH "Set RPATH; this can fight with package managers so turn off when building for them" ON )
@@ -47,6 +49,60 @@ if(USE_OMP)
     message(FATAL_ERROR "OpenMP NOT found! Try turning it off!")
   endif()
 endif()
+
+# Find the system install kokkos
+if(USE_KOKKOS)
+  if(USE_BUNDLED_KOKKOS)
+    message(STATUS "Kokkos add-on enabled; using the kokkos release version!")
+    project(kokkos-download NONE)
+    include(ExternalProject)
+    ExternalProject_Add( kokkos-download
+      GIT_REPOSITORY    https://github.com/kokkos/kokkos.git
+      GIT_TAG           master
+      GIT_SHALLOW       "True"
+      PREFIX            "${CMAKE_CURRENT_BINARY_DIR}/kokkos"
+      UPDATE_DISCONNECTED "True"                        # Skip update from git step
+      SOURCE_SUBDIR     "./"                  # Specifies where the CMakeLists.txt file is
+      CMAKE_ARGS        "-DBUILD_TESTING=ON"
+      CMAKE_ARGS        "-DBUILD_SHARED_LIBS=ON"
+      CMAKE_ARGS        "-DKOKKOS_ENABLE_LAMBDA=ON"
+      CMAKE_ARGS        "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/kokkos/install"
+      CMAKE_ARGS        "-DCMAKE_INSTALL_LIBDIR=lib"
+      CMAKE_ARGS        "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"         # use the same CXX compiler
+      CMAKE_ARGS        "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"             # use the same C compiler
+      CMAKE_ARGS        "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"               # use the same CXX flags
+      CMAKE_ARGS        "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"                   # use the same C flags
+      CMAKE_ARGS        "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}" # use the same linker flags
+      CMAKE_ARGS        "-DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}" # use the same deployment target
+      INSTALL_DIR       "${CMAKE_CURRENT_BINARY_DIR}/kokkos/install"
+        # !! <INSTALL_DIR> doesn't contain any value now !!
+        # But it can be used later by others to retrieve where the installation is.
+      LOG_CONFIGURE     "True"      # Save output in a file, instead of the terminal.
+      LOG_BUILD         "True"      # Save output in a file, instead of the terminal.
+      LOG_INSTALL       "True"      # Save output in a file, instead of the terminal.
+    )
+
+    ExternalProject_Get_Property( kokkos-download INSTALL_DIR )
+    include_directories("${INSTALL_DIR}/include")
+    link_directories( "${INSTALL_DIR}/lib" )
+    set(SPERR_KOKKOS_DEPENDENCY "")
+
+  else()
+    #find_package(Kokkos REQUIRED)
+    find_package(PkgConfig REQUIRED)
+    pkg_search_module(KOKKOS REQUIRED IMPORTED_TARGET GLOBAL libkokkoscore )
+    set(SPERR_KOKKOS_DEPENDENCY "libkokkoscore")
+    message(STATUS "KOKKOS add-on enabled; using the system version: ${KOKKOS_LINK_LIBRARIES}")
+    if ()
+       message(STATUS "Kokkos found! ")
+    else()
+       message(FATAL_ERROR "Kokkos NOT found! Try turning it off!")
+    endif()
+
+
+  endif()
+endif()
+
 
 #
 # Gather git commit SHA1
@@ -238,5 +294,12 @@ install( FILES "${CMAKE_BINARY_DIR}/SperrConfig.h" DESTINATION ${CMAKE_INSTALL_I
 #
 if( USE_ZSTD AND USE_BUNDLED_ZSTD )
   ExternalProject_Get_Property( zstd-download INSTALL_DIR )
+  install( DIRECTORY "${INSTALL_DIR}/lib/" TYPE LIB )
+endif()
+
+# Copy over KOKKOS libraries
+#
+if( USE_KOKKOS AND USE_BUNDLED_KOKKOS )
+  ExternalProject_Get_Property( kokkos-download INSTALL_DIR )
   install( DIRECTORY "${INSTALL_DIR}/lib/" TYPE LIB )
 endif()

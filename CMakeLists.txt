@@ -65,7 +65,15 @@ if(USE_KOKKOS)
       SOURCE_SUBDIR     "./"                  # Specifies where the CMakeLists.txt file is
       CMAKE_ARGS        "-DBUILD_TESTING=ON"
       CMAKE_ARGS        "-DBUILD_SHARED_LIBS=ON"
+      CMAKE_ARGS        "-DKokkos_ARCH_VOLTA70=ON"
       CMAKE_ARGS        "-DKOKKOS_ENABLE_LAMBDA=ON"
+      CMAKE_ARGS        "-DKokkos_ARCH_SKX=ON"
+      CMAKE_ARGS        "-DKokkos_ENABLE_CUDA=ON"
+      CMAKE_ARGS        "-DKokkos_CUDA_DIR=/usr/local/cuda/"
+      CMAKE_ARGS        "-DKokkos_ENABLE_CUDA_LAMBDA=ON"
+      CMAKE_ARGS        "-DKokkos_ENABLE_CUDA_UVM=ON"
+      CMAKE_ARGS        "-DKokkos_ENABLE_OPENMP=ON"
+      CMAKE_ARGS        "-DKokkos_ENABLE_SERIAL=ON"
       CMAKE_ARGS        "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/kokkos/install"
       CMAKE_ARGS        "-DCMAKE_INSTALL_LIBDIR=lib"
       CMAKE_ARGS        "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"         # use the same CXX compiler

@@ -76,8 +76,8 @@ if(USE_KOKKOS)
       CMAKE_ARGS        "-DKokkos_ENABLE_SERIAL=ON"
       CMAKE_ARGS        "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/kokkos/install"
       CMAKE_ARGS        "-DCMAKE_INSTALL_LIBDIR=lib"
-      CMAKE_ARGS        "-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}"         # use the same CXX compiler
-      CMAKE_ARGS        "-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}"             # use the same C compiler
+      CMAKE_ARGS        "-DCMAKE_CXX_COMPILER=${CMAKE_CURRENT_BINARY_DIR}/kokkos/src/kokkos-download/bin/nvcc_wrapper"
+      CMAKE_ARGS        "-DCMAKE_C_COMPILER=${CMAKE_CURRENT_BINARY_DIR}/kokkos/src/kokkos-download/bin/nvcc_wrapper"
       CMAKE_ARGS        "-DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}"               # use the same CXX flags
       CMAKE_ARGS        "-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}"                   # use the same C flags
       CMAKE_ARGS        "-DCMAKE_EXE_LINKER_FLAGS=${CMAKE_EXE_LINKER_FLAGS}" # use the same linker flags

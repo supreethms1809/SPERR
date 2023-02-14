@@ -52,8 +52,8 @@ RUN cd /home/Odie && \
 
 ENV KOKKOS_INSTALL=/home/Odie/kokkos/install/
 ENV Kokkos_ROOT=${KOKKOS_INSTALL}
-ENV CC=/usr/local/cuda/bin/nvcc_wrapper
-ENV CXX=/usr/local/cuda/bin/nvcc_wrapper
+ENV CC=/usr/local/cuda/bin/nvcc
+ENV CXX=/usr/local/cuda/bin/nvcc
 
 # Clone the repo, and build it
 RUN cd /home/Odie && \

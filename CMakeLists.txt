@@ -9,7 +9,7 @@ project(SPERR VERSION 0.6.1 DESCRIPTION "Lossy Scientific Compression with SPERR
 # CMake will try to add a -std=c++20 flag if the compiler supports, but if it doesn't,
 # CMake will `decay` to a previous supported flag, e.g. -std=c++11.
 #
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
     # Set the possible values of build type for cmake-gui

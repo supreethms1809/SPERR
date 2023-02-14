@@ -9,7 +9,7 @@ LABEL maintainer="ssuresh@ucar.edu"
 # Update the image to the latest packages
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y git vim cmake-curses-gui build-essential && \
+    apt-get install -y git vim libzstd-dev pkg-config libgtest-dev cmake-curses-gui build-essential && \
     groupadd -r Odie && useradd -r -g Odie Odie && \
     mkdir -p /home/Odie && cd /home && chown Odie:Odie Odie
 #
@@ -52,14 +52,12 @@ RUN cd /home/Odie && \
 
 ENV KOKKOS_INSTALL=/home/Odie/kokkos/install/
 ENV Kokkos_ROOT=${KOKKOS_INSTALL}
-#ENV CC=/home/Odie/kokkos/install/bin/nvcc_wrapper
-#ENV CXX=/home/Odie/kokkos/install/bin/nvcc_wrapper
+ENV CC=/usr/local/cuda/bin/nvcc_wrapper
+ENV CXX=/usr/local/cuda/bin/nvcc_wrapper
 
 # Clone the repo, and build it
 RUN cd /home/Odie && \
     git clone --depth 1 --branch kokkos_ext_lib https://github.com/supreethms1809/SPERR.git SPERR_src
-#    cd SPERR_src 
-#    git checkout kokkos_ext_lib
 #
 # Update PATH enviornment variable
 ENV PATH="$PATH:/home/Odie/SPERR-src/build/bin"

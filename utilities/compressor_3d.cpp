@@ -9,8 +9,14 @@
 #include <iostream>
 #include <memory>
 
+#include <Kokkos_Core.hpp>
+
 int main(int argc, char* argv[])
 {
+  Kokkos::initialize(argc,argv);
+  {
+    std::cout << "Hello world " << std::endl;
+
   // Parse command line options
   CLI::App app("Compress a 3D data volume\n");
 
@@ -267,6 +273,7 @@ int main(int argc, char* argv[])
       }
     }
   }  // Finish using the decompressor.
-
+  }
+  Kokkos::finalize();
   return 0;
 }

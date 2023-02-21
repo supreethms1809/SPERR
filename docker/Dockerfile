@@ -53,7 +53,7 @@ RUN cd /home/Odie && \
 ENV KOKKOS_INSTALL=/home/Odie/kokkos/install/
 ENV Kokkos_ROOT=${KOKKOS_INSTALL}
 ENV CC=gcc
-ENV CXX=${KOKKOS_INSTALL}/bin/nvcc
+ENV CXX=${KOKKOS_INSTALL}/bin/nvcc_wrapper
 
 # Clone the repo, and build it
 RUN cd /home/Odie && \

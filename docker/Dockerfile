@@ -9,12 +9,13 @@ LABEL maintainer="ssuresh@ucar.edu"
 # Update the image to the latest packages
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y git vim libzstd-dev pkg-config libgtest-dev cmake-curses-gui build-essential && \
-    groupadd -r Odie && useradd -r -g Odie Odie && \
-    mkdir -p /home/Odie && cd /home && chown Odie:Odie Odie
+    apt-get install -y git vim libzstd-dev pkg-config libgtest-dev cmake-curses-gui build-essential
+#    groupadd -r Odie && useradd -r -g Odie Odie && \
+RUN mkdir -p /home/sperr
+#&& cd /home && chown Odie:Odie Odie
 #
 # Switch user
-USER Odie
+#USER Odie
 #
 
 #set CUDA
@@ -27,7 +28,7 @@ ENV CC=gcc
 ENV CXX=g++
 
 # Clone the kokkos repo, and build it
-RUN cd /home/Odie && \
+RUN cd /usr/local/ && \
     git clone https://github.com/kokkos/kokkos.git && \
     cd kokkos && \
     mkdir -p build install && \
@@ -43,20 +44,20 @@ RUN cd /home/Odie && \
 	-DKokkos_ENABLE_CUDA_UVM=ON    \
 	-DKokkos_ENABLE_OPENMP=ON   \
 	-DKokkos_ENABLE_SERIAL=ON   \
-	-DCMAKE_CXX_COMPILER=/home/Odie/kokkos/bin/nvcc_wrapper \
-	-DCMAKE_C_COMPILER=/home/Odie/kokkos/bin/nvcc_wrapper  \
+	-DCMAKE_CXX_COMPILER=/usr/local/kokkos/bin/nvcc_wrapper \
+	-DCMAKE_C_COMPILER=/usr/local/kokkos/bin/nvcc_wrapper  \
 	-DCMAKE_CXX_FLAGS=--expt-relaxed-constexpr   \
 	-DCMAKE_C_FLAGS=--expt-relaxed-constexpr    \
-	-DCMAKE_INSTALL_PREFIX=/home/Odie/kokkos/install/ .. && \
+	-DCMAKE_INSTALL_PREFIX=/usr/local/kokkos/install/ .. && \
     make -j4 && make install
 
-ENV KOKKOS_INSTALL=/home/Odie/kokkos/install/
+ENV KOKKOS_INSTALL=/usr/local/kokkos/install/
 ENV Kokkos_ROOT=${KOKKOS_INSTALL}
 ENV CC=gcc
 ENV CXX=${KOKKOS_INSTALL}/bin/nvcc_wrapper
 
 # Clone the repo, and build it
-RUN cd /home/Odie && \
+RUN cd /home/sperr && \
     git clone --depth 1 --branch kokkos_ext_lib https://github.com/supreethms1809/SPERR.git SPERR_src
 #
 # Update PATH enviornment variable

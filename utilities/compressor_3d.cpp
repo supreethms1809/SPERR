@@ -8,6 +8,7 @@
 #include <cstring>
 #include <iostream>
 #include <memory>
+#include<Kokkos_Core.hpp>
 
 #include <Kokkos_Core.hpp>
 
@@ -180,7 +181,9 @@ int main(int argc, char* argv[])
   }
 
   // Get a hold of the encoded bitstream.
+  Kokkos::Profiling::pushRegion("get_encode_bitstream");
   auto stream = compressor->get_encoded_bitstream();
+  Kokkos::Profiling::popRegion();
   if (stream.empty()) {
     std::cerr << "Compression bitstream empty!" << std::endl;
     return __LINE__;

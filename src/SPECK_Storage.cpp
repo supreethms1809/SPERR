@@ -224,7 +224,6 @@ auto sperr::SPECK_Storage::m_refinement_pass_encode() -> RTNType
   for (auto idx : m_LSP_new)
     m_LSP_mask[idx] = true;
   m_LSP_new.clear();
-
   return RTNType::Good;
 }
 

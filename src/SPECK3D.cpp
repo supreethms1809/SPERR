@@ -344,20 +344,24 @@ auto sperr::SPECK3D::m_decide_significance(const SPECKSet3D& set) const
 
   const size_t slice_size = m_dims[0] * m_dims[1];
 
-  const auto gtr = [thld = m_threshold](auto v) { return v >= thld; };
+  //const auto gtr = [thld = m_threshold](auto v) { return v >= thld; };
 
   for (auto z = set.start_z; z < (set.start_z + set.length_z); z++) {
     const size_t slice_offset = z * slice_size;
     for (auto y = set.start_y; y < (set.start_y + set.length_y); y++) {
-      auto first = m_coeff_buf.begin() + (slice_offset + y * m_dims[0] + set.start_x);
-      auto last = first + set.length_x;
-      auto found = std::find_if(first, last, gtr);
-      if (found != last) {
-        auto xyz = std::array<uint32_t, 3>();
-        xyz[0] = std::distance(first, found);
-        xyz[1] = y - set.start_y;
-        xyz[2] = z - set.start_z;
-        return {SigType::Sig, xyz};
+      //auto first = m_coeff_buf.begin() + (slice_offset + y * m_dims[0] + set.start_x);
+      //auto last = first + set.length_x;
+      //auto found = std::find_if(first, last, gtr);
+      //if (found != last) {
+      //  auto xyz = std::array<uint32_t, 3>();
+      //  xyz[0] = std::distance(first, found);
+      //  xyz[1] = y - set.start_y;
+      //  xyz[2] = z - set.start_z;
+      //  return {SigType::Sig, xyz};
+      //}
+      for (auto x = set.start_x; x < (set.start_x + set.length_x); x++) {
+        if (m_coeff_buf[slice_offset + y * m_dims[0] + x] >= m_threshold)
+          return {SigType::Sig, {0, 0, 0}};
       }
     }
   }
@@ -389,26 +393,26 @@ auto sperr::SPECK3D::m_process_S_encode(size_t idx1,
   if (sig == SigType::Dunno) {
     auto set_sig = m_decide_significance(set);
     set.signif = set_sig.first;
-    if (set.signif == SigType::Sig) {
+    //if (set.signif == SigType::Sig) {
       // Try to deduce the significance of some of its subsets.
       // Step 1: which one of the 8 subsets makes it significant?
       //         (Refer to m_partition_S_XYZ() for subset ordering.)
-      auto xyz = set_sig.second;
-      size_t sub_i = 0;
-      sub_i += (xyz[0] < (set.length_x - set.length_x / 2)) ? 0 : 1;
-      sub_i += (xyz[1] < (set.length_y - set.length_y / 2)) ? 0 : 2;
-      sub_i += (xyz[2] < (set.length_z - set.length_z / 2)) ? 0 : 4;
-      subset_sigs[sub_i] = SigType::Sig;
+      //auto xyz = set_sig.second;
+      //size_t sub_i = 0;
+      //sub_i += (xyz[0] < (set.length_x - set.length_x / 2)) ? 0 : 1;
+      //sub_i += (xyz[1] < (set.length_y - set.length_y / 2)) ? 0 : 2;
+      //sub_i += (xyz[2] < (set.length_z - set.length_z / 2)) ? 0 : 4;
+      //subset_sigs[sub_i] = SigType::Sig;
 
       // Step 2: if it's the 5th, 6th, 7th, or 8th subset significant, then
       //         the first four subsets must be insignificant. Again, this is
       //         based on the ordering of subsets.
       // In a cube there is 30% - 40% chance this condition meets.
-      if (sub_i >= 4) {
-        for (size_t i = 0; i < 4; i++)
-          subset_sigs[i] = SigType::Insig;
-      }
-    }
+      //if (sub_i >= 4) {
+      //  for (size_t i = 0; i < 4; i++)
+      //    subset_sigs[i] = SigType::Insig;
+      //}
+    //}
   }
   else {
     set.signif = sig;

@@ -386,29 +386,29 @@ auto sperr::SPECK3D::m_decide_significance(const SPECKSet3D& set) const
       auto temp_view = view_type("temp_view", set.length_x);
       auto host_view = Kokkos::create_mirror_view(temp_view);
       auto start = (slice_offset + y * m_dims[0] + set.start_x);
-      std::cout<<"m_coeff_buf size "<<m_coeff_buf.size()<<std::endl;
-      std::cout<<"slice_offset "<<slice_offset<<" "<<m_dims[0]<<" "<<m_threshold<<std::endl;
-      std::cout<<"set length_x "<<set.length_x<<std::endl;
-      std::cout<<"set length_y "<<set.length_y<<std::endl;
-      std::cout<<"set length_z "<<set.length_z<<std::endl;
-      std::cout<<"before start "<<start<<std::endl;
-      for (int i = start; i<(start+set.length_x); i++) {
-        host_view(i) = m_coeff_buf[i];
+      //std::cout<<"m_coeff_buf size "<<m_coeff_buf.size()<<std::endl;
+      //std::cout<<"slice_offset "<<slice_offset<<" "<<m_dims[0]<<" "<<m_threshold<<std::endl;
+      //std::cout<<"set length_x "<<set.length_x<<std::endl;
+      //std::cout<<"set length_y "<<set.length_y<<std::endl;
+      //std::cout<<"set length_z "<<set.length_z<<std::endl;
+      //std::cout<<"before start "<<start<<std::endl;
+      for (int i = 0; i<set.length_x; i++) {
+        host_view(i) = m_coeff_buf[i+start];
       }
-      std::cout <<"for loop"<<std::endl;
+      //std::cout <<"for loop"<<std::endl;
       Kokkos::deep_copy(temp_view, host_view);
-      std::cout<<"deep copy"<<std::endl;
+      //std::cout<<"deep copy"<<std::endl;
       auto found = KE::find_if(exespace(), KE::begin(temp_view), KE::end(temp_view),p );
-      std::cout<<"after start "<<start<<std::endl;
-      auto found = std::find_if(first, last, gtr);
-      /*if (found != last) {
+      //std::cout<<"after start "<<start<<std::endl;
+      auto found1 = std::find_if(first, last, gtr);
+      if (found1 != last) {
         auto xyz = std::array<uint32_t, 3>();
-        xyz[0] = std::distance(first, found);
+        xyz[0] = std::distance(first, found1);
         xyz[1] = y - set.start_y;
         xyz[2] = z - set.start_z;
         return {SigType::Sig, xyz};
       }
-       */
+       
     }
   }//);
 

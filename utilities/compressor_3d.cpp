@@ -15,6 +15,16 @@ int main(int argc, char* argv[])
 {
   Kokkos::initialize(argc,argv);
   {
+  #ifdef KOKKOS_ENABLE_CUDA
+  #define MemSpace Kokkos::CudaSpace
+  #endif
+  //#ifdef KOKKOS_ENABLE_OPENMP
+  // //#define MemSpace Kokkos::OpenMP
+  // //#endif
+  //
+  // #ifndef MemSpace
+  // #define MemSpace Kokkos::HostSpace
+  // #endif
     std::cout << "Hello world " << std::endl;
 
   // Parse command line options

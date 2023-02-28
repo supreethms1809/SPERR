@@ -42,7 +42,7 @@ class SPECK3D : public SPECK_Storage {
   auto encode() -> RTNType;
   auto decode() -> RTNType;
 
- private:
+ //private:
   auto m_ready_to_encode() const -> bool;
   auto m_ready_to_decode() const -> bool;
   void m_clean_LIS();

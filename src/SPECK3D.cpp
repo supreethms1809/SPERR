@@ -4,10 +4,27 @@
 #include <cmath>
 #include <cstring>
 #include <numeric>
+#include <iostream>
+#include<Kokkos_Core.hpp>
+#include <Kokkos_StdAlgorithms.hpp>
 
 using d2_type = std::array<double, 2>;
 using u2_type = std::array<uint32_t, 2>;
 
+namespace KE = Kokkos::Experimental;
+  using  exespace = Kokkos::DefaultExecutionSpace;
+  using view_type = Kokkos::View<double*>;
+  template<class ValueType>
+  struct EqualsValue
+  {
+  const ValueType m_value;
+  EqualsValue(ValueType value) : m_value(value){}
+
+  KOKKOS_INLINE_FUNCTION
+  bool operator()(const ValueType & operand) const {
+    return operand >= m_value;
+   }
+  }; 
 //
 // Class SPECKSet3D
 //
@@ -345,22 +362,55 @@ auto sperr::SPECK3D::m_decide_significance(const SPECKSet3D& set) const
   const size_t slice_size = m_dims[0] * m_dims[1];
 
   const auto gtr = [thld = m_threshold](auto v) { return v >= thld; };
+  /*auto exespace = Kokkos::DefaultExecutionSpace;
+  template<class ValueType>
+  struct EqualsValue
+  {
+  const ValueType m_value;
+  EqualsValFunctor(ValueType value) : m_value(value){}
 
+  KOKKOS_INLINE_FUNCTION
+  bool operator()(const ValueType & operand) const {
+    return operand >= m_value;
+   }
+  };*/ 
+
+  EqualsValue p(m_threshold);
+  //Kokkos::RangePolicy<> policy_1(set.start_z,set.start_z+set.length_z);
+  //Kokkos::parallel_for (policy_1, KOKKOS_LAMBDA (size_t z ){
   for (auto z = set.start_z; z < (set.start_z + set.length_z); z++) {
     const size_t slice_offset = z * slice_size;
     for (auto y = set.start_y; y < (set.start_y + set.length_y); y++) {
       auto first = m_coeff_buf.begin() + (slice_offset + y * m_dims[0] + set.start_x);
       auto last = first + set.length_x;
+      auto temp_view = view_type("temp_view", set.length_x);
+      auto host_view = Kokkos::create_mirror_view(temp_view);
+      auto start = (slice_offset + y * m_dims[0] + set.start_x);
+      std::cout<<"m_coeff_buf size "<<m_coeff_buf.size()<<std::endl;
+      std::cout<<"slice_offset "<<slice_offset<<" "<<m_dims[0]<<" "<<m_threshold<<std::endl;
+      std::cout<<"set length_x "<<set.length_x<<std::endl;
+      std::cout<<"set length_y "<<set.length_y<<std::endl;
+      std::cout<<"set length_z "<<set.length_z<<std::endl;
+      std::cout<<"before start "<<start<<std::endl;
+      for (int i = start; i<(start+set.length_x); i++) {
+        host_view(i) = m_coeff_buf[i];
+      }
+      std::cout <<"for loop"<<std::endl;
+      Kokkos::deep_copy(temp_view, host_view);
+      std::cout<<"deep copy"<<std::endl;
+      auto found = KE::find_if(exespace(), KE::begin(temp_view), KE::end(temp_view),p );
+      std::cout<<"after start "<<start<<std::endl;
       auto found = std::find_if(first, last, gtr);
-      if (found != last) {
+      /*if (found != last) {
         auto xyz = std::array<uint32_t, 3>();
         xyz[0] = std::distance(first, found);
         xyz[1] = y - set.start_y;
         xyz[2] = z - set.start_z;
         return {SigType::Sig, xyz};
       }
+       */
     }
-  }
+  }//);
 
   return {SigType::Insig, {0, 0, 0}};
 }

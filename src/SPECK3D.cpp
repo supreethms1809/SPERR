@@ -378,13 +378,14 @@ auto sperr::SPECK3D::m_decide_significance(const SPECKSet3D& set) const
   EqualsValue p(m_threshold);
   //Kokkos::RangePolicy<> policy_1(set.start_z,set.start_z+set.length_z);
   //Kokkos::parallel_for (policy_1, KOKKOS_LAMBDA (size_t z ){
+  auto temp_view = view_type("temp_view", set.length_x);
+  auto host_view = Kokkos::create_mirror_view(temp_view);
   for (auto z = set.start_z; z < (set.start_z + set.length_z); z++) {
+      //std::cout<<"slice_offset "<<z*slice_size<<" "<<m_dims[0]<<" "<<m_threshold<<std::endl;
     const size_t slice_offset = z * slice_size;
     for (auto y = set.start_y; y < (set.start_y + set.length_y); y++) {
       auto first = m_coeff_buf.begin() + (slice_offset + y * m_dims[0] + set.start_x);
       auto last = first + set.length_x;
-      auto temp_view = view_type("temp_view", set.length_x);
-      auto host_view = Kokkos::create_mirror_view(temp_view);
       auto start = (slice_offset + y * m_dims[0] + set.start_x);
       //std::cout<<"m_coeff_buf size "<<m_coeff_buf.size()<<std::endl;
       //std::cout<<"slice_offset "<<slice_offset<<" "<<m_dims[0]<<" "<<m_threshold<<std::endl;
@@ -400,10 +401,10 @@ auto sperr::SPECK3D::m_decide_significance(const SPECKSet3D& set) const
       //std::cout<<"deep copy"<<std::endl;
       auto found = KE::find_if(exespace(), KE::begin(temp_view), KE::end(temp_view),p );
       //std::cout<<"after start "<<start<<std::endl;
-      auto found1 = std::find_if(first, last, gtr);
-      if (found1 != last) {
+      //auto found1 = std::find_if(first, last, gtr);
+      if (found != KE::end(temp_view)) {
         auto xyz = std::array<uint32_t, 3>();
-        xyz[0] = std::distance(first, found1);
+        xyz[0] = KE::distance(KE::begin(temp_view),found); //std::distance(first, found1);
         xyz[1] = y - set.start_y;
         xyz[2] = z - set.start_z;
         return {SigType::Sig, xyz};

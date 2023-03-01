@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
   // #define MemSpace Kokkos::HostSpace
   // #endif
     std::cout << "Hello world " << std::endl;
+  std::cout<<"Using "<< typeid(Kokkos::DefaultExecutionSpace).name() << "memory space" << std::endl;
 
   // Parse command line options
   CLI::App app("Compress a 3D data volume\n");

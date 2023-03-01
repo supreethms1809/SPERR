@@ -33,12 +33,12 @@ auto sperr::SPERR3D_Compressor::take_data(sperr::vecd_type&& buf, sperr::dims_ty
   return RTNType::Good;
 }
 
-auto sperr::SPERR3D_Compressor::view_encoded_bitstream() const -> const std::vector<uint8_t>&
+auto sperr::SPERR3D_Compressor::view_encoded_bitstream() const -> const vec8_type&
 {
   return m_encoded_stream;
 }
 
-auto sperr::SPERR3D_Compressor::release_encoded_bitstream() -> std::vector<uint8_t>&&
+auto sperr::SPERR3D_Compressor::release_encoded_bitstream() -> vec8_type&&
 {
   return std::move(m_encoded_stream);
 }
@@ -177,7 +177,7 @@ auto sperr::SPERR3D_Compressor::m_assemble_encoded_bitstream() -> RTNType
   // stream.
   if (m_encoded_stream.empty())
     m_encoded_stream.resize(m_condi_stream.size());
-  std::copy(m_condi_stream.begin(), m_condi_stream.end(), m_encoded_stream.begin());
+  std::copy(m_condi_stream.cbegin(), m_condi_stream.cend(), m_encoded_stream.begin());
 
   // If there's outlier correction stream, copy it over too.
   if (!m_sperr_stream.empty()) {

@@ -2,7 +2,7 @@
 
 cmake_minimum_required(VERSION 3.14)
 
-project(SPERR VERSION 0.6.1 DESCRIPTION "Lossy Scientific Compression with SPERR")
+project(SPERR VERSION 0.6.2 DESCRIPTION "Lossy Scientific Compression with SPERR")
 
 #
 # specify the C++ standard
@@ -47,6 +47,8 @@ if(USE_OMP)
     message(FATAL_ERROR "OpenMP NOT found! Try turning it off!")
   endif()
 endif()
+
+find_package(Kokkos REQUIRED)
 
 #
 # Gather git commit SHA1

@@ -5,6 +5,9 @@
 #include <cstring>
 #include <numeric>
 
+#include "Kokkos_Core.hpp"
+#include "Kokkos_StdAlgorithms.hpp"
+
 using d2_type = std::array<double, 2>;
 using u2_type = std::array<uint32_t, 2>;
 
@@ -80,7 +83,7 @@ auto sperr::SPECK3D::encode() -> RTNType
 
   // Decide the starting threshold for quantization.
   size_t num_bitplanes = 128;
-  const auto max_coeff = *std::max_element(m_coeff_buf.begin(), m_coeff_buf.end());
+  const auto max_coeff = *std::max_element(m_coeff_buf.cbegin(), m_coeff_buf.cend());
   if (m_mode_cache == CompMode::FixedPWE || m_mode_cache == CompMode::FixedPSNR) {
     const auto terminal_threshold = m_estimate_finest_q();
     auto max_t = terminal_threshold;
@@ -342,6 +345,9 @@ auto sperr::SPECK3D::m_decide_significance(const SPECKSet3D& set) const
 {
   assert(!set.is_empty());
 
+  namespace KE = Kokkos::Experimental;
+  using exespace = Kokkos::DefaultExecutionSpace;
+
   const size_t slice_size = m_dims[0] * m_dims[1];
 
   const auto gtr = [thld = m_threshold](auto v) { return v >= thld; };
@@ -349,9 +355,10 @@ auto sperr::SPECK3D::m_decide_significance(const SPECKSet3D& set) const
   for (auto z = set.start_z; z < (set.start_z + set.length_z); z++) {
     const size_t slice_offset = z * slice_size;
     for (auto y = set.start_y; y < (set.start_y + set.length_y); y++) {
-      auto first = m_coeff_buf.begin() + (slice_offset + y * m_dims[0] + set.start_x);
+      auto first = m_coeff_buf.cbegin() + (slice_offset + y * m_dims[0] + set.start_x);
       auto last = first + set.length_x;
       auto found = std::find_if(first, last, gtr);
+      //auto found = KE::find_if(exespace(), first, last, gtr);
       if (found != last) {
         auto xyz = std::array<uint32_t, 3>();
         xyz[0] = std::distance(first, found);
@@ -572,7 +579,7 @@ auto sperr::SPECK3D::m_code_S_decode(size_t idx1, size_t idx2) -> RTNType
 
 auto sperr::SPECK3D::m_ready_to_encode() const -> bool
 {
-  if (std::any_of(m_dims.begin(), m_dims.end(), [](auto v) { return v == 0; }))
+  if (std::any_of(m_dims.cbegin(), m_dims.cend(), [](auto v) { return v == 0; }))
     return false;
   if (m_coeff_buf.size() != m_dims[0] * m_dims[1] * m_dims[2])
     return false;
@@ -582,7 +589,7 @@ auto sperr::SPECK3D::m_ready_to_encode() const -> bool
 
 auto sperr::SPECK3D::m_ready_to_decode() const -> bool
 {
-  if (std::any_of(m_dims.begin(), m_dims.end(), [](auto v) { return v == 0; }))
+  if (std::any_of(m_dims.cbegin(), m_dims.cend(), [](auto v) { return v == 0; }))
     return false;
   if (m_bit_buffer.empty())
     return false;

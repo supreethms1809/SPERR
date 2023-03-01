@@ -3,6 +3,8 @@
 
 #include "CLI11.hpp"
 
+#include "Kokkos_Core.hpp"
+
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
@@ -11,6 +13,9 @@
 
 int main(int argc, char* argv[])
 {
+  // Initialize Kokkos
+  Kokkos::initialize(argc, argv);
+
   // Parse command line options
   CLI::App app("Compress a 3D data volume\n");
 
@@ -140,7 +145,7 @@ int main(int argc, char* argv[])
   // Free up memory if we don't need to compute stats
   if (!show_stats) {
     orig.clear();
-    orig.shrink_to_fit();
+    //orig.shrink_to_fit();
   }
 
   // Tell the compressor which compression mode to use.
@@ -210,7 +215,7 @@ int main(int argc, char* argv[])
     if (show_stats) {
       // Make sure that we have a copy of the original data in double precision.
       const double* orig_ptr = nullptr;
-      auto orig_tmp = std::vector<double>();
+      auto orig_tmp = sperr::vecd_type();
       if (use_double)
         orig_ptr = reinterpret_cast<const double*>(orig.data());
       else {
@@ -267,6 +272,9 @@ int main(int argc, char* argv[])
       }
     }
   }  // Finish using the decompressor.
+
+  // Finalize Kokkos
+  Kokkos::finalize();
 
   return 0;
 }

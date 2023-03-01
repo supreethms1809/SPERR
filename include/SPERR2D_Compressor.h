@@ -23,7 +23,7 @@ class SPERR2D_Compressor {
       -> RTNType;
 
   // Accept incoming data by taking ownership of the memory block
-  auto take_data(std::vector<double>&& buf, sperr::dims_type dims) -> RTNType;
+  auto take_data(sperr::vecd_type&& buf, sperr::dims_type dims) -> RTNType;
 
   auto set_target_bpp(double) -> RTNType;
   void set_target_psnr(double);
@@ -34,8 +34,8 @@ class SPERR2D_Compressor {
 
   auto compress() -> RTNType;
 
-  auto view_encoded_bitstream() const -> const std::vector<uint8_t>&;
-  auto release_encoded_bitstream() -> std::vector<uint8_t>&&;
+  auto view_encoded_bitstream() const -> const sperr::vec8_type&;
+  auto release_encoded_bitstream() -> sperr::vec8_type&&;
 
  private:
   sperr::dims_type m_dims = {0, 0, 0};

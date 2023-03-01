@@ -47,8 +47,7 @@ auto sperr::calc_approx_detail_len(size_t orig_len, size_t lev) -> std::array<si
 
 // Good solution to deal with bools and unsigned chars
 // https://stackoverflow.com/questions/8461126/how-to-create-a-byte-out-of-8-bool-values-and-vice-versa
-auto sperr::pack_booleans(std::vector<uint8_t>& dest, const std::vector<bool>& src, size_t offset)
-    -> RTNType
+auto sperr::pack_booleans(vec8_type& dest, const std::vector<bool>& src, size_t offset) -> RTNType
 {
   // `src` has to have a size of multiples of 8.
   if (src.size() % 8 != 0)
@@ -165,7 +164,7 @@ auto sperr::pack_8_booleans(std::array<bool, 8> src) -> uint8_t
   // It turns out that C++ doesn't specify bool to be one byte,
   // so to be safe we copy the content of src to array of uint8_t.
   auto bytes = std::array<uint8_t, 8>();
-  std::copy(src.begin(), src.end(), bytes.begin());
+  std::copy(src.cbegin(), src.cend(), bytes.begin());
   const uint64_t magic = 0x8040201008040201;
   uint64_t t = 0;
   std::memcpy(&t, bytes.data(), 8);
@@ -183,13 +182,13 @@ auto sperr::unpack_8_booleans(uint8_t src) -> std::array<bool, 8>
   auto bytes = std::array<uint8_t, 8>();
   std::memcpy(bytes.data(), &t, 8);
   auto b8 = std::array<bool, 8>();
-  std::copy(bytes.begin(), bytes.end(), b8.begin());
+  std::copy(bytes.cbegin(), bytes.cend(), b8.begin());
   return b8;
 }
 
-auto sperr::read_n_bytes(std::string filename, size_t n_bytes) -> std::vector<uint8_t>
+auto sperr::read_n_bytes(std::string filename, size_t n_bytes) -> vec8_type
 {
-  auto buf = std::vector<uint8_t>();
+  auto buf = vec_type<uint8_t>();
 
   std::unique_ptr<std::FILE, decltype(&std::fclose)> fp(std::fopen(filename.data(), "rb"),
                                                         &std::fclose);
@@ -210,9 +209,9 @@ auto sperr::read_n_bytes(std::string filename, size_t n_bytes) -> std::vector<ui
 }
 
 template <typename T>
-auto sperr::read_whole_file(std::string filename) -> std::vector<T>
+auto sperr::read_whole_file(std::string filename) -> vec_type<T>
 {
-  std::vector<T> buf;
+  vec_type<T> buf;
 
   std::unique_ptr<std::FILE, decltype(&std::fclose)> fp(std::fopen(filename.data(), "rb"),
                                                         &std::fclose);
@@ -231,9 +230,9 @@ auto sperr::read_whole_file(std::string filename) -> std::vector<T>
 
   return buf;
 }
-template auto sperr::read_whole_file(std::string) -> std::vector<float>;
-template auto sperr::read_whole_file(std::string) -> std::vector<double>;
-template auto sperr::read_whole_file(std::string) -> std::vector<uint8_t>;
+template auto sperr::read_whole_file(std::string) -> vecf_type;
+template auto sperr::read_whole_file(std::string) -> vecd_type;
+template auto sperr::read_whole_file(std::string) -> vec8_type;
 
 auto sperr::write_n_bytes(std::string filename, size_t n_bytes, const void* buffer) -> RTNType
 {
@@ -284,8 +283,8 @@ auto sperr::calc_stats(const T* arr1, const T* arr2, size_t arr_len, size_t omp_
     return {rmse, linfty, psnr, arr1min, arr1max};
   }
 
-  auto sum_vec = std::vector<T>(num_of_strides + 1);
-  auto linfty_vec = std::vector<T>(num_of_strides + 1);
+  auto sum_vec = vec_type<T>(num_of_strides + 1);
+  auto linfty_vec = vec_type<T>(num_of_strides + 1);
 
 //
 // Calculate diff summation and l-infty of each stride
@@ -323,7 +322,7 @@ auto sperr::calc_stats(const T* arr1, const T* arr2, size_t arr_len, size_t omp_
   //
   // Now calculate linfty
   //
-  linfty = *(std::max_element(linfty_vec.begin(), linfty_vec.end()));
+  linfty = *(std::max_element(linfty_vec.cbegin(), linfty_vec.cend()));
 
   //
   // Now calculate rmse and psnr
@@ -359,8 +358,7 @@ auto sperr::kahan_summation(const T* arr, size_t len) -> T
 template auto sperr::kahan_summation(const float*, size_t) -> float;
 template auto sperr::kahan_summation(const double*, size_t) -> double;
 
-auto sperr::chunk_volume(const std::array<size_t, 3>& vol_dim,
-                         const std::array<size_t, 3>& chunk_dim)
+auto sperr::chunk_volume(dims_type vol_dim, dims_type chunk_dim)
     -> std::vector<std::array<size_t, 6>>
 {
   // Step 1: figure out how many segments are there along each axis.
@@ -414,9 +412,9 @@ auto sperr::chunk_volume(const std::array<size_t, 3>& vol_dim,
 
 template <typename T1, typename T2>
 auto sperr::gather_chunk(const T1* vol, dims_type vol_dim, const std::array<size_t, 6>& chunk)
-    -> std::vector<T2>
+    -> vec_type<T2>
 {
-  auto chunk_buf = std::vector<T2>();
+  auto chunk_buf = vec_type<T2>();
   if (chunk[0] + chunk[1] > vol_dim[0] || chunk[2] + chunk[3] > vol_dim[1] ||
       chunk[4] + chunk[5] > vol_dim[2])
     return chunk_buf;
@@ -437,18 +435,18 @@ auto sperr::gather_chunk(const T1* vol, dims_type vol_dim, const std::array<size
   return chunk_buf;
 }
 template auto sperr::gather_chunk(const float*, dims_type, const std::array<size_t, 6>&)
-    -> std::vector<float>;
+    -> sperr::vecf_type;
 template auto sperr::gather_chunk(const float*, dims_type, const std::array<size_t, 6>&)
-    -> std::vector<double>;
+    -> sperr::vecd_type;
 template auto sperr::gather_chunk(const double*, dims_type, const std::array<size_t, 6>&)
-    -> std::vector<float>;
+    -> sperr::vecf_type;
 template auto sperr::gather_chunk(const double*, dims_type, const std::array<size_t, 6>&)
-    -> std::vector<double>;
+    -> sperr::vecd_type;
 
 template <typename TBIG, typename TSML>
-void sperr::scatter_chunk(std::vector<TBIG>& big_vol,
+void sperr::scatter_chunk(vec_type<TBIG>& big_vol,
                           dims_type vol_dim,
-                          const std::vector<TSML>& small_vol,
+                          const vec_type<TSML>& small_vol,
                           const std::array<size_t, 6>& chunk)
 {
   size_t idx = 0;
@@ -456,26 +454,27 @@ void sperr::scatter_chunk(std::vector<TBIG>& big_vol,
     const size_t plane_offset = z * vol_dim[0] * vol_dim[1];
     for (size_t y = chunk[2]; y < chunk[2] + chunk[3]; y++) {
       const size_t col_offset = plane_offset + y * vol_dim[0];
-      for (size_t x = chunk[0]; x < chunk[0] + chunk[1]; x++)
+      for (size_t x = chunk[0]; x < chunk[0] + chunk[1]; x++) {
         big_vol[col_offset + x] = small_vol[idx++];
+      }
     }
   }
 }
-template void sperr::scatter_chunk(std::vector<float>&,
+template void sperr::scatter_chunk(vec_type<float>&,
                                    dims_type,
-                                   const std::vector<float>&,
+                                   const vec_type<float>&,
                                    const std::array<size_t, 6>&);
-template void sperr::scatter_chunk(std::vector<float>&,
+template void sperr::scatter_chunk(vec_type<float>&,
                                    dims_type,
-                                   const std::vector<double>&,
+                                   const vec_type<double>&,
                                    const std::array<size_t, 6>&);
-template void sperr::scatter_chunk(std::vector<double>&,
+template void sperr::scatter_chunk(vec_type<double>&,
                                    dims_type,
-                                   const std::vector<float>&,
+                                   const vec_type<float>&,
                                    const std::array<size_t, 6>&);
-template void sperr::scatter_chunk(std::vector<double>&,
+template void sperr::scatter_chunk(vec_type<double>&,
                                    dims_type,
-                                   const std::vector<double>&,
+                                   const vec_type<double>&,
                                    const std::array<size_t, 6>&);
 
 auto sperr::parse_header(const void* ptr) -> HeaderInfo
@@ -549,7 +548,7 @@ auto sperr::calc_variance(const T* arr, size_t len, size_t omp_nthreads) -> T
 
   const size_t stride_size = 4096;
   const size_t num_strides = len / stride_size;
-  auto tmp_buf = std::vector<T>(num_strides + 1);
+  auto tmp_buf = vec_type<T>(num_strides + 1);
 
   // First, calculate the mean of this array.
 #pragma omp parallel for num_threads(omp_nthreads)
